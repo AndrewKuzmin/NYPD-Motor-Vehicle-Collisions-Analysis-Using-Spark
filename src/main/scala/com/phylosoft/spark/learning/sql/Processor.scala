@@ -1,9 +1,10 @@
 package com.phylosoft.spark.learning.sql
 
+import com.phylosoft.spark.learning.sql.transform.CSVTransformer
 import com.typesafe.config.ConfigFactory
-import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
+import org.apache.spark.sql.{SaveMode, SparkSession}
 
-class Processor(appName: String) {
+class Processor(appName: String, path: String) {
 
   private val appConf = ConfigFactory.load
 
@@ -21,23 +22,20 @@ class Processor(appName: String) {
       .option("delimiter", ",")
       .option("header", true)
       .option("inferSchema", "true")
-      .csv("data/collisions/data_sample/NYPD_Motor_Vehicle_Collisions.csv")
+      .csv(path)
       .cache()
 
     //  println("Count = " + lines.count())
 
-    val outputDF = checkAndFormatFromFile(inputDF)
+    val transformer = new CSVTransformer(spark, appConf)
+    val outputDF = transformer.checkAndFormatFromFile(inputDF)
 
     outputDF.write
       .format("org.apache.spark.sql.cassandra")
-      .options(Map( "table" -> appConf.getString("cassandra.table"), "keyspace" -> appConf.getString("cassandra.keyspace")))
+      .options(Map("table" -> appConf.getString("cassandra.table"), "keyspace" -> appConf.getString("cassandra.keyspace")))
       .mode(SaveMode.Append)
       .save()
 
-  }
-
-  def checkAndFormatFromFile(inputDF: DataFrame): DataFrame = {
-    inputDF
   }
 
 }

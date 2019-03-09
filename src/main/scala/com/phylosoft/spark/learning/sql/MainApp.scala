@@ -4,7 +4,12 @@ object MainApp {
 
   def main(args: Array[String]): Unit = {
 
-    val processor = new Processor("MainApp")
+    if (args.length < 1) {
+      System.err.println("Usage: MainApp <src-data-dir>")
+      System.exit(1)
+    }
+
+    val processor = new Processor("MainApp", args(0).trim)
 
     processor.start()
 
